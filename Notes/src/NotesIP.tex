@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in, paperwidth=8.3in, paperheight=11.7in]{geometry}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{changepage} 
+
+\begin{document}
+
+\pagestyle{fancy}
+\setlength\parindent{0pt}
+\allowdisplaybreaks
+
+\renewcommand{\headrulewidth}{0pt}
+
+% Cover page title
+\title{Image Processing and Computer Vision - Notes}
+\author{Dom Hutchinson}
+\date{\today}
+\maketitle
+
+% Header
+\fancyhead[L]{Dom Hutchinson}
+\fancyhead[C]{Image Processing and Computer Vision - Notes}
+\fancyhead[R]{\today}
+
+% Counters
+\newcounter{definition}[section]
+\newcounter{example}[section]
+\newcounter{notation}[section]
+\newcounter{proposition}[section]
+\newcounter{remark}[section]
+\newcounter{theorem}[section]
+
+% commands
+\newcommand{\dotprod}[0]{\boldsymbol{\cdot}}
+\newcommand{\cosech}[0]{\mathrm{cosech}\ }
+\newcommand{\cosec}[0]{\mathrm{cosec}\ }
+\newcommand{\sech}[0]{\mathrm{sech}\ }
+\newcommand{\blocks}[0]{\mathbb{B}}
+\newcommand{\nats}[0]{\mathbb{N}}
+\newcommand{\real}[0]{\mathbb{R}}
+\newcommand{\integers}[0]{\mathbb{Z}}
+\newcommand{\nb}[0]{\textit{N.B.} }
+
+\newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}\\}
+\newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}\\}
+\newcommand{\notation}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}\\}
+\newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}\\}
+\newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}\\}
+\newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
+
+\tableofcontents
+
+% Start of content
+\newpage
+
+\section{Counting Techniques}
+
+\end{document}
