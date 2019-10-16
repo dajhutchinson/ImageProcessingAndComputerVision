@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{changepage} 
+\usepackage{longtable} 
 
 \begin{document}
 
@@ -41,6 +42,7 @@
 \newcounter{proposition}[section]
 \newcounter{remark}[section]
 \newcounter{theorem}[section]
+\newcounter{proof}[section]
 
 % commands
 \newcommand{\dotprod}[0]{\boldsymbol{\cdot}}
@@ -60,6 +62,7 @@
 \newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}\\}
 \newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}\\}
 \newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
+\newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}\\}
 
 \tableofcontents
 
@@ -96,7 +99,7 @@ $$\int_{-\infty}^\infty f(a,b)\delta(a-x,b-y)dadb=f(x,y)$$
 
 \definition{Point Spread-Function}
 A \textit{Point Spread-Function} is applied after sampling an image. It takes the value of a pixel \& transforms pixels around it using this value in some way.\\
-\eg\raisebox{-0.5\height}{\includegraphics[scale=1]{img/psf.png}}
+\eg\raisebox{-0.5\height}{\includegraphics[scale=1]{img/psf.png}} (Should be a white dot on black background but ink).
 
 \section{Image Representation}
 
@@ -150,21 +153,171 @@ Suppose you have a system, represented by kernel $g(x)$, \& an input signal, rep
 Since images are represnted by discrete 2D functions $f:\nats\times\nats\to(\nats\times\nats\times\nats)$ it is pertinent to understand \textit{2D Discrete Convolution}.\\
 $$h(x,y)=\sum_{i\in I}\sum_{j\in J}f(x-i,y-j)g(i,j)$$
 Often the kernel, $g(x,y)$, has negative indices so the pixel being acted upto is equivalent to the middle pixel in the matrix representation of $g(x,y)$.\\
-\nb A convolution whose kernel is symmetric on 180 degree rotation is called a \textit{Correlation}.
+\nb A convolution whose kernel is symmetric on 180 degree rotation is called a \textit{Correlation}.\\
 
 \example{2D Discrete Convolution}
 Below is a representation of a grayscale image, $f(x,y)$, on the left \& a kernel $g(x,y)$ on the right.
 \includegraphics[scale=.3]{img/2dconvolution.png}\\
 $(f*g)(x,y)=f(x+1,y+1)g(-1,-1)+f(x+1,y)g(0-1,0)+\dots+f(x-1,y-1)g(1,1)=-68$.\\
 
-\remark{High/Loss Pass Filtering}
-Kernels can be defined for specific desired effects on an image through convolution.\\
+\example{Kernels}
+Kernels an be defined with specific outcomes in mind.\\
+\begin{longtable}{|l|l|}
+\hline
+\textbf{Operation}&\textbf{Matrix}\\
+\hline
+Identity&$\begin{pmatrix}
+0&0&0\\
+0&1&0\\
+0&0&0
+\end{pmatrix}$\\
+\hline
+Edge Detection&$\begin{pmatrix}
+1&0&-1\\
+0&0&0\\
+-1&0&1
+\end{pmatrix}$\\
+&$\begin{pmatrix}
+0&1&0\\
+1&-4&1\\
+0&1&1
+\end{pmatrix}$\\
+&$\begin{pmatrix}
+-1&-1&-1\\
+-1&8&-1\\
+-1&-1&-1
+\end{pmatrix}$\\
+\hline
+Sharpen&$\begin{pmatrix}
+0&-1&0\\
+-1&5&-1\\
+0&-1&0
+\end{pmatrix}$\\
+\hline
+Box Blur&$\dfrac{1}{9}\begin{pmatrix}
+1&1&1\\
+1&1&1\\
+1&1&1
+\end{pmatrix}$
+\\
+\hline
+Gaussian Blur $3\times3$&$\dfrac{1}{16}\begin{pmatrix}
+1&2&1\\
+2&4&2\\
+1&2&1
+\end{pmatrix}$\\
+\hline
+Gaussian Blur $5\times5$&$\dfrac{1}{256}\begin{pmatrix}
+1&4&6&4&1\\
+4&16&24&16&4\\
+6&24&36&24&6\\
+4&16&24&16&4\\
+1&4&5&4&1
+\end{pmatrix}$\\
+\hline
+Unsharp Masking $5\times5$&$\dfrac{-1}{256}\begin{pmatrix}
+1&4&6&4&1\\
+4&16&24&16&4\\
+6&24&-476&24&6\\
+4&16&24&16&4\\
+1&4&6&4&1
+\end{pmatrix}$\\
+\hline
+\end{longtable}
+
+\section{Frequency Domains \& Image Transforms}
+
+\definition{Image Transform}
+An \textit{Image Transform} is deriving a new representation of the input data by encoding the image using another parameter space (\eg Fourier, DCT, Wavelet, etc.).\\
+
+\remark{Purpose of Image Transforms}
+\textit{Image Transforms} can be used in
 \begin{enumerate}[label=\roman*)]
-\item An image can be made more fuzzy using a \textit{Low Pass Kernel}
-$$\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$$
-\item An image can be made sharper using a \textit{High Pass Kernel}
-$$\begin{pmatrix}-1&-1&-1\\-1&8&-1\\-1&-1&-1\end{pmatrix}$$
+	\item Image Filtering;
+	\item Image Compression;
+	\item Feature Extraction;
+	\item etc.
 \end{enumerate}
+
+\definition{Properties of a Signal}
+A \textit{Signal} is a sinusoidal function over continuous time. They have the following properties
+\begin{enumerate}[label=\roman*)]
+	\item Frequency - Number of cycles per second, Hz;
+	\item Period - Length of a cycle, s;
+	\item Amplitude - Peak intensity of the signal;
+	\item Phase - The shift of the trig wave from its default position, $\pi$.
+\end{enumerate}
+
+\theorem{Fourier's Theorem}
+All periodic functions over continous time can be expressed as a sum of $\sin$ \&$ \cos$ terms, each with their own amplitude \& shift.\\
+$$f(t)=a_0\sin(t+\theta_0)+a_1\cos(t+\theta_1)+\dots$$
+
+\example{Fourier Transform}
+\includegraphics[scale=2]{img/fourier_transform.jpg}
+
+\proposition{Frequency in Images}
+\textit{Frequency in Images} is measured as the rate of change in intensity along a given line on the image.\\
+
+\remark{Fourier Transform on Frequency in Images}
+If we read the intensity values along a single row or column we can produce a sinusoidal wave which generalises the distribution \& then perform a \textit{Fourier Transform}.\\
+
+\definition{2D Discrete-Space Fourier Transform}
+Images can be considered as 2-Dimensional discrete space. Let $f(x,y)$ be the intensity of the pixel at position $(x,y)$. 2D Discrete-Space Fourier Transforms have two variables: $u\in[-\pi,\pi)$ for the vertical frequency; and, $v\in[-\pi,\pi)$ for the horizontal frequency.
+\[\begin{array}{rcl}
+\underbrace{F(u,v)}_{\text{Fourier Space}}&=&{\displaystyle\sum_{y=0}^{m-1}\sum_{x=0}^{n-1}f(x,y)e^{i(ux+vy)}}\\
+&=&{\displaystyle\sum_{y=0}^{m-1}\sum_{x=0}^{n-1}f(x,y)\left[\cos(ux+vy)+\sin(ux+vy)\right]}
+\end{array}\]
+\nb $F(u,v)$ is a complex number.\\
+
+\proposition{Interpretations of 2D Fourier Transform}
+Since $F(u,v)$ is a complex number we cannot plot it exactly. Thus we consider
+\begin{enumerate}[label=\roman*)]
+	\item $\text{Magnitude},\ |F(u,v)|:=\sqrt{F_\text{r}(u,v)^2+F_\text{i}(u,v)^2}$, and
+	\item $\text{Phase Angles},\ \theta(u,v):=\tan^{-1}\left(\dfrac{F_\text{i}(u,v)}{F_\text{r}(u,v)}\right)$
+\end{enumerate}
+
+\remark{Expressing $F(u,v)$ in Polar Cordinates}
+$$F(u,v)=|F(u,v)|e^{i\theta(u,v)}$$
+
+\remark{Plotting Magnitude, $|F(u,v)|$}
+On the left we have a gray scale image \& on the right we have the magnitude of a fourier transform on this image. On the right hand image the $y$-axis is $u\in[-\pi,\pi)$ and the $x$-axis is $v\in[-\pi,\pi)$. We see lots of straight lines since a linear transformation on $F(u,v)=F(au,av)\ \forall\ a\in\mathbb{R}$. Each line can be interpreted as the frequency of intensity for lines in the left hand image which are parallel to it.\\
+\includegraphics[scale=3]{img/fourier_transform_magnitude.jpg}\\
+%TODO interpretting
+
+\theorem{Convolution Theorem}
+Let $f$ be an image, $g$ be a kernel, $F$ be the result of a fourier transform on $f$ and $G$ be a kernel. Then
+$$h=f*g\Longleftrightarrow H=FG$$
+
+\proof{Convolution Theorem}
+\[\begin{array}{rcl}
+h(x)&=&f(x)*g(x)\\
+&=&\sum_yf(x-y)g(y)\\
+H(u)&=&\sum_x\left(\sum_yf(x-y)g(y)\right)e^{iux}\\
+&=&\sum_xg(y)\sum_xf(x-y)e^{iux}\\
+&=&\sum_yg(y)\left(F(u)e^{iux}\right)\\
+&=&\sum_yg(y)e^{iuy}F(u)\\
+&=&G(u)\cdot F(u)\\
+&=&F(u)\cdot G(u)
+\end{array}\]
+
+\definition{Butterworth's Low Pass Filter}
+\textit{Butterworth's Low Pass Filter} is a \textit{Signal Processing Filter} designed to have a frequency response which is as flat as possible. It appears to soften an image
+$$H(u,v)=\frac{1}{1+\left(\dfrac{r(u,v)}{r_0}\right)^{2n}}\text{ of order $n$}$$
+
+\definition{Butterworth's High Pass Filter}
+\textit{Butterworth's High Pass Filter} is a \textit{Signal Processing Filter} designed to have a frequency response which is as flat as possible. It appears to sharpen an image
+$$H(u,v)=\frac{1}{1+\left(\dfrac{r_0}{r(u,v)}\right)^{2n}}\text{ of order $n$}$$
+
+\newpage
+\setcounter{section}{-1}
+
+\section{Reference}
+
+\subsection{Definitions}
+
+\definition{Kernel}
+A \textit{Kernel} is a small matrix used in convolution. Typically $3\times3$ or $5\times5$. \textit{Kernels} can be defined for blurring, sharpening, embossing, edge detection \& more
+\nb This definition only applies to image processing \& is different from the definition in linear algebra.
 
 
 \end{document}
