@@ -51,7 +51,7 @@
 \newcommand{\sech}[0]{\mathrm{sech}\ }
 \newcommand{\blocks}[0]{\mathbb{B}}
 \newcommand{\nats}[0]{\mathbb{N}}
-\newcommand{\real}[0]{\mathbb{R}}
+\newcommand{\reals}[0]{\mathbb{R}}
 \newcommand{\integers}[0]{\mathbb{Z}}
 \newcommand{\nb}[0]{\textit{N.B.} }
 \newcommand{\eg}[0]{\textit{e.g.} }
@@ -63,6 +63,14 @@
 \newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}\\}
 \newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
 \newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}\\}
+\newcommand{\definitionn}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}}
+\newcommand{\examplee}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}}
+\newcommand{\notationn}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}}
+\newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}}
+\newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}}
+\newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}}
+\newcommand{\prooff}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}}
+
 
 \tableofcontents
 
@@ -307,6 +315,173 @@ $$H(u,v)=\frac{1}{1+\left(\dfrac{r(u,v)}{r_0}\right)^{2n}}\text{ of order $n$}$$
 \definition{Butterworth's High Pass Filter}
 \textit{Butterworth's High Pass Filter} is a \textit{Signal Processing Filter} designed to have a frequency response which is as flat as possible. It appears to sharpen an image
 $$H(u,v)=\frac{1}{1+\left(\dfrac{r_0}{r(u,v)}\right)^{2n}}\text{ of order $n$}$$
+
+\section{Edges \& Shapes}
+
+\subsection{Edge Detection}
+
+\remark{Edges are Useful}
+Edges are one of the best features to identify an object with. This \textit{Edge-Detection} is a useful thing to be able to do.
+
+\definition{Edge}
+An \textit{Edge} is a sharp change in image brightness. Edges are produced by object boundaries, patterns \& shadows, this can lead to us finding \textit{Nusiance Edges} which do not help achieve our goal.\\
+
+\example{Edge Detection}
+\includegraphics[scale=.7]{img/edgeDetection.png}
+
+\remark{Uses of Edges}
+\textit{Edges} are used for
+\begin{enumerate}[label=\roman*)]
+	\item Segmentation - Finding object boundaries;
+	\item Recognition - Extracting patterns;
+	\item Motion Analysis - Finding reliable tracking regions.
+\end{enumerate}
+
+\remark{Edge Detection Strategy}
+In order to find edges we want to determine the \textit{rate of change} in a pixel's neighbourhood
+
+\definition{Image Gradient}
+\textit{Image Gradient} is a vector which gives the direction of greatest change in intensity at a specific pixel. For a pixel at $(x,y)$ with $f:\reals\times\reals\to\reals$ mapping to the intensity the \textit{Image Gradient} is
+$$\nabla f(x,y):=\begin{pmatrix}
+\frac{\partial f}{\partial x}\\
+\frac{\partial f}{\partial y}
+\end{pmatrix}$$
+\nb Generally denoted by $\Psi$.\\
+
+\definition{Angle of Gradient}
+$$\Psi:=\tan^{-1}\left(\dfrac{\partial f/\partial y}{\partial f/\partial x}\right)$$
+
+\definition{Edge Direction}
+\textit{Edge Direction} for a specific pixel is the direction of an edge, it is perprendicular/orthogonal to the \textit{Image Gradient}.\\
+\nb Generally denoted by $\Phi$.\\
+$$\Phi:=\Psi-\frac{\pi}{2}=\tan^{-1}\left(\dfrac{\partial f/\partial y}{\partial f/\partial x}\right)-\dfrac{\pi}{2}$$
+
+\definition{Image Gradient Magnitude}
+\textit{Magnitude} measures the magnitude of the growth.
+$$|\nabla f(x,y)|:=\sqrt{\left(\dfrac{\partial f}{\partial x}\right)^2+\left(\dfrac{\partial f}{\partial y}\right)^2}$$
+
+\proposition{Estimating $\nabla f$}
+We can define $\frac{\partial f}{\partial x}$ and $\frac{\partial f}{\partial y}$ to be matrices, rather than typical derivatives, in order to produce estimates for the \textit{Image Gradient} which can be used to analyse an image by convolution. We can then combine the results in order to analyse \textit{Image Gradient Angle} and \textit{Magnitude}. Consider
+$$\dfrac{\partial f}{\partial x}=\begin{pmatrix}-1&0&1\\-1&0&1\\-1&0&1\end{pmatrix}\text{ and }\dfrac{\partial f}{\partial y}=\begin{pmatrix}-1&-1&-1\\0&0&0\\1&1&1\end{pmatrix}$$
+\includegraphics[scale=.5]{img/gradientExtractionByFiltering.png}
+
+\definition{Prewitt Operator}
+\textit{Prewitt Operator}s are a set of $3\times3$ kernels used for estimating the \textit{Image Gradient}. There are 8 \textit{Prewitt Operators}, each in a different direction\\
+\begin{tabular}{|c|c|c|c|}
+\hline
+$\begin{pmatrix}
+1&1&1\\
+0&0&0\\
+-1&-1&-1
+\end{pmatrix}$&
+$\begin{pmatrix}
+0&1&1\\
+-1&0&1\\
+-1&-1&0
+\end{pmatrix}$&
+$\begin{pmatrix}
+-1&0&1\\
+-1&0&1\\
+-1&0&1
+\end{pmatrix}$&
+$\begin{pmatrix}
+-1&-1&0\\
+-1&0&1\\
+0&1&1
+\end{pmatrix}$\\
+\hline
+$\begin{pmatrix}
+-1&-1&-1\\
+0&0&0\\
+1&1&1
+\end{pmatrix}$&
+$\begin{pmatrix}
+0&-1&-1\\
+1&0&-1\\
+1&1&0
+\end{pmatrix}$&
+$\begin{pmatrix}
+1&0&-1\\
+1&0&-1\\
+1&0&-1
+\end{pmatrix}$&
+$\begin{pmatrix}
+1&1&0\\
+1&0&-1\\
+0&-1&-1
+\end{pmatrix}$\\
+\hline
+\end{tabular}\\
+
+\remark{Alternative estimates of $\nabla f$}
+Instead of weighting all pixels in a given direction equally, we may want to weight central ones more heavily. This is since the central pixels are geometrically closer to the pixel which is being acted upon \& such should better describe it.
+$$\dfrac{\partial f}{\partial x}=\begin{pmatrix}
+-1&0&1\\
+-2&0&2\\
+-1&0&1
+\end{pmatrix}\quad\dfrac{\partial f}{\partial y}=\begin{pmatrix}
+1&2&1\\
+0&0&0\\
+-1&-2&-1
+\end{pmatrix}$$
+
+\subsection{Shapes}
+
+\definition{Hough Transform}
+A \textit{House Transform} is used to find lines which best explain the set of edge points given to it. \textit{Hough Transform}s are centred around the premise that lines can be described by ${\rho=x\cos\theta+y\sin\theta}$ where either $(x,y)$ is fixed, or $(rho,theta)$ is fixed.\\
+Suppose we are given an edge point $(x_0,y_0)$, we are now dealing with the case where $(\rho,\theta)$ are variable. Plot all the combinations of $(\rho,\theta)$ than produce lines which pass through $(x_0,y_0)$ produces a sinusoidal wave.\\
+\includegraphics[scale=.7]{img/houghTransform.png}
+
+\proposition{Line Detection Algorithm}
+Below is an algorithm which uses the \textit{Hough Transform} on a set of edge points in order to detect lines in an image
+\begin{enumerate}[label=\roman*)]
+	\item Make available an $n=2$ dimensional array, $H(\rho,\theta)$, to be used for the parameter space;
+	\item Find the \textit{Gradient Image}, $G(x,y)$;
+	\item For any pixel $(x_0,y_0)$ where $|G(x_0,y_0)|>T_s$ (some threshold value) increment all values of $H(\rho,\theta)$ where $(\rho,\theta)$ satisfy $\rho=x_0\cos\theta_0+y_0\sin\theta_0$.
+	$$\forall\ \rho,\theta\text{ where }\rho=x_0\cos\theta_0+y_0\sin\theta_0\text{ do }H(\rho,\theta)+=1$$
+	\item Any $(\rho,\theta)$ where $H(\rho,\theta)>=T_h$ (another threshold value) represent a straight line which has been detected in the image.
+\end{enumerate}
+
+\propositionn{Circle Detection Algorithm}
+\begin{enumerate}[label=\roman*)]
+	\item Make available an $n=3$ dimensional array, $H(x,y,r)$, to be used for the parameter space;
+	\item Find the \textit{Gradient Image}, $G(x,y)$;
+	\item For any pixel $(x_0,y_0)$ where $|G(x_0,y_0)|>T_s$ increment all $H(x,y,r)$ which satisfy
+	$$\forall\ r\text{ where }x_0=x+r\cos\Phi\text{ and }y_0+y+r\sin\Phi$$
+	\item Any $(x,y,r)$ where $H(x,y,r)>T_h$ represents a circle with radius $r$ and centre $(x_0,y_0)$
+\end{enumerate}
+
+\definition{General Hough Transform}
+A \textit{Genereal Hough Transform} is used to describe general shapes.
+\begin{enumerate}[label=\roman*)]
+	\item Find the \textit{Gradient Image}, $G(x,y)$.
+	\item Define a set of points $\phi_i:=\frac{pi}{i}$ for $i\in[1,k]$ and create a table using $\phi_1,\dots,\phi_k$ as indexes.
+	\item Define a reference point $(x_c,y_c)$ to act as a \textit{centre of mass}.
+	\item For any given edge point $(x_0,y_0)$ find
+	$$r=\sqrt{(x_0-x_c)^2+(y_0-y_c)^2},\ \beta=\tan^{-1}\left(\dfrac{y_0-y_c}{x_0-x_c}\right)\text{ and }\Phi_{(x_0,y_0)}\text{ in }G(x,y)$$
+	\item Round $\Phi_{(x_0,y_0)}$ to the nearest $\phi_i$ and insert $(r,\beta)$ into the table at $\phi_i$
+\end{enumerate}
+
+\propositionn{General Shape Detection Algorithm}
+\begin{enumerate}[label=\roman*)]
+	\item Prepare $2$ dimensional array $H(x_c,y_c)$ for the parameter space (Set of all possible centre of masses).
+	\item $\forall\ (x_0,y_0)$ where $|G(x_0,y_0)|>T_s$ find the table entry, $\phi_i$, closest to $\Phi_{(x_0,y_0)}$.
+	\item $\forall\ (r_j,\beta_j)$ in the table entry find
+	$$x_c=x+r\cos\beta\text{ and }y_c=y+r\sin\beta$$
+	Increment $H(x_c,y_c)$.
+	\item All $(x_c,y_c)$ where $H(x_c,y_c)>T_h$ represents the locations of centre of masses for occurances of the shap, in the image.
+\end{enumerate}
+
+\remark{Issues with \textbf{Proposition 4.4}}
+The algorithm defined in \textbf{Proposition 4.4} only detects shapes of the same \textit{scale} and \textit{orientation} as the original image. To counter this we introduce two new variables to the parameter space: $S$, a scaling factor; and, $\theta$, an orientation factor.
+\begin{enumerate}[label=\roman*)]
+	\item Prepare $4$ dimensional array $H(x_c,y_c,S,\theta)$ for the parameter space (Set of all possible centre of masses, scales \& orientations).
+	\item $\forall\ (x_0,y_0)$ where $|G(x_0,y_0)|>T_s$ find the table entry, $\phi_i$, closest to $\Phi_{(x_0,y_0)}$.
+	\item $\forall\ (r_j,\beta_j)$ in the table entry find
+	$$x_c=x+rS\cos(\beta+\theta)\text{ and }y_c=y+rS\sin(\beta+\theta)$$
+	Increment $H(x_c,y_c,S,\theta)$.
+	\item All $(x_c,y_c)$ where $H(x_c,y_c,S,\theta)>T_h$ represents the locations of centre of masses, scaling factors \& orientations for occurances of the shape in the image.
+\end{enumerate}
 
 \newpage
 \setcounter{section}{-1}
