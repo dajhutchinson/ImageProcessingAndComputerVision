@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 import sys
 
-def convolution(image,kernel) -> [[]]:
+def convolution(image:[[]],kernel:[[]]) -> [[]]:
     radius_x=int((kernel.shape[0]-1)/2)
     radius_y=int((kernel.shape[1]-1)/2)
 
@@ -27,14 +27,17 @@ def convolution(image,kernel) -> [[]]:
             output[i,j]=sum
     return output
 
-def normalise(img) -> [[]]:
+def normalise(img:[[]],min=None,max=None) -> [[]]:
+    min_set=not(min is None)
+    max_set=not(max is None)
     normalised=np.zeros(img.shape)
-    min=sys.maxsize; max=-sys.maxsize
+    if (not min_set): min=sys.maxsize
+    if (not max_set): max=-sys.maxsize
     for i in range (0,img.shape[0]):
         for j in range (0,img.shape[1]):
-            if img[i,j]<min:
+            if (img[i,j]<min) and (not min_set):
                 min=img[i,j]
-            elif (img[i,j]>max):
+            elif (img[i,j]>max) and (not max_set):
                 max=img[i,j]
 
     for i in range(0,img.shape[0]):
@@ -42,7 +45,7 @@ def normalise(img) -> [[]]:
             normalised[i,j]=int(((img[i,j]-min)/(max-min))*255)
     return normalised
 
-def magnitude(dx,dy) -> [[]]:
+def magnitude(dx:[[]],dy:[[]]) -> [[]]:
     m=np.zeros(img.shape)
 
     for i in range(0,m.shape[0]):
@@ -51,16 +54,15 @@ def magnitude(dx,dy) -> [[]]:
 
     return normalise(m)
 
-def direction(dx,dy) -> [[]]:
-    d=np.zeros(img.shape)
-
-    for i in range(0,d.shape[0]):
-        for j in range(0,d.shape[1]):
+def direction(dx:[[]],dy:[[]]) -> [[]]:
+    d=np.zeros(dx.shape)
+    for i in range(0,dx.shape[0]):
+        for j in range(0,dx.shape[1]):
             if dx[i,j]==0:
                 dx[i,j]=1/sys.maxsize
-            d[i,j]=np.arctan(dy[i,j]/dx[i,j])
-
-    return normalise(d)
+            d[i,j]=np.arctan2(dy[i,j],dx[i,j])
+    normalised=normalise(d,min=-np.pi,max=np.pi)
+    return normalised
 
 dx=np.matrix([[-1,0,1],[-2,0,2],[-1,0,1]])
 dy=np.matrix([[1,2,1],[0,0,0],[-1,-2,-1]])
