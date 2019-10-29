@@ -54,6 +54,7 @@
 \newcommand{\reals}[0]{\mathbb{R}}
 \newcommand{\integers}[0]{\mathbb{Z}}
 \newcommand{\nb}[0]{\textit{N.B.} }
+\newcommand{\ie}[0]{\textit{i.e.} }
 \newcommand{\eg}[0]{\textit{e.g.} }
 
 \newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}\\}
@@ -424,11 +425,12 @@ $$\dfrac{\partial f}{\partial x}=\begin{pmatrix}
 0&0&0\\
 -1&-2&-1
 \end{pmatrix}$$
+\nb This is called the \textit{Sobel Filter}.
 
 \subsection{Shapes}
 
 \definition{Hough Transform}
-A \textit{House Transform} is used to find lines which best explain the set of edge points given to it. \textit{Hough Transform}s are centred around the premise that lines can be described by ${\rho=x\cos\theta+y\sin\theta}$ where either $(x,y)$ is fixed, or $(rho,theta)$ is fixed.\\
+A \textit{Hough Transform} is used to find lines which best explain the set of edge points given to it. \textit{Hough Transform}s are centred around the premise that lines can be described by ${\rho=x\cos\theta+y\sin\theta}$ where either $(x,y)$ is fixed, or $(\rho,\theta)$ is fixed.\\
 Suppose we are given an edge point $(x_0,y_0)$, we are now dealing with the case where $(\rho,\theta)$ are variable. Plot all the combinations of $(\rho,\theta)$ than produce lines which pass through $(x_0,y_0)$ produces a sinusoidal wave.\\
 \includegraphics[scale=.7]{img/houghTransform.png}
 
@@ -483,6 +485,97 @@ The algorithm defined in \textbf{Proposition 4.4} only detects shapes of the sam
 	\item All $(x_c,y_c)$ where $H(x_c,y_c,S,\theta)>T_h$ represents the locations of centre of masses, scaling factors \& orientations for occurances of the shape in the image.
 \end{enumerate}
 
+\section{Image Segmentation}
+
+\definition{Image Segmentation}
+\textit{Image Segmentation} is the process of partitioning the pixels in an image into homogenous regions. This may wrt colour, texture, object.\\
+
+\remark{Usefulness of Image Segmentation}
+\textit{Image Segmentation} is useful since it simplifies an image from millions of pixels into a few regions making computation much easier.\\
+
+\definition{Gestalt Rules for Grouping \& Segmentation}
+It is useful to consider the different ways in which we can group objects.\\
+\includegraphics[scale=.5]{img/gestalt.png}
+
+\remark{Perfect Image Segmentation is hard}
+It is hard to achieve perfect \textit{Image Segmentation} since pixels may straddle the boundary of objects \& thus not truely belong to any object. Noise, non-uniform illumination, occlusions etc. will also cause problems.\\
+
+\definition{Over-Segmentation}
+\textit{Over-Segmentation} is when an image is segmented into too many regions \& loses the efficienies gained by the simplication of \textit{Image Segmentation}.\\
+
+\example{Over-Segmentation}
+\includegraphics[scale=1]{img/overSegmentation.png}
+
+\definition{Under-Segmentation}
+\textit{Uner-Segmentation} is when an image is segmented into too few regions \& too much information is lost.\\
+
+\example{Under-Segmentation}
+\includegraphics[scale=1]{img/underSegmentation.png}
+
+\proposition{Segmentation Technique Types}
+There are several groups of techniques that can be used for \textit{Image Segmentation}
+\begin{enumerate}[label=\roman*)]
+	\item Thresholding. Categorise pixels wrt intensity.
+	\item Edge-Based. Region boundaries are produced using an edge map.
+	\item Region-Based. Regions are grown from seed pixels or using split-merge techniques.
+	\item Clustering \& Statistical. Global partioning, oftern based around histograms. (\eg K-means).
+	\item Topographic (OUT OF SCOPE). Stepwise simplications that take spatially wider image configurations into account.
+\end{enumerate}
+
+\proposition{Thresholding Image Segmentation}
+\textit{Thresholding} is a good technique when trying to distinguish dark objects(background) from bright objects (foreground). One possible algorithm is
+\begin{enumerate}[label=\roman*)]
+	\item Choose a threshold value $T$.
+	\item For each pixel:
+	\begin{enumerate}
+		\item If the brighness is less than $T$ map to $0$ (black).
+		\item else, map to $255$ (white).
+	\end{enumerate}
+\end{enumerate}
+
+\remark{Choosing Threshold Value}
+Choosing a value for \textit{Thresholding} is important since if it is too high then the background pixels are classified as the foreground. And visa-versa for too low.\\
+
+\proposition{Choosing Threshold Value}
+There are several techinques used for choosing \textit{Threshold Value}. By consider the histogram of an image's intensity we can produce regions for classification.
+\begin{enumerate}[label=\roman*)]
+	\item Make an initial estimate for threshold $T$.
+	\item Segment the image using $T$: Let $G_1$ be the pixels with intensity $>T$; and $G_2$ be the pixels with intensity $<T$.
+	\item COmpute the average intensity values $m_1$ \& $m_2$ for $G_1$ \& $G_2$ respectively.
+	\item Compute a new threshold value $T=\frac{1}{2}(m_1+m_2)$.
+	\item Repeat \textbf{ii)-iv)} until convergence.
+\end{enumerate}
+
+\proposition{Edge-Based Segmentation}
+When performing \textit{Edge-Based Image Segmentation} we want to detect strong edges that are relevant to the objet we wish to detect. There are several techniques for assessing the strength of an edge, but generally we wish to remove edges that are isolated of irrelevant to an object. One valid technique is edge relaxation where we change the strength of an edge depending upon its 6 neighbour edges.\\
+\includegraphics[scale=.7]{img/edgeRelaxation.png}.\\
+
+\proposition{Region Growing-Seed Pixel}
+A function is required to analyse the homogeneity of two pixels $(s,p)\to\{0,1\}$.
+\begin{enumerate}[label=\roman*)]
+	\item Choose an initial seed pixel;
+	\item Consider the neighbouring pixels:
+	\begin{enumerate}
+		\item If it is close to seed pixel, add to region \& to queue to be analysed.
+		\item Else, do nothing with it.
+	\end{enumerate}
+	\item Repeat \textbf{ii)} until there are no pixels left in the queue to be analysed.
+\end{enumerate}
+\nb You may wish to add a final step to remove small regions.\\
+
+\proposition{Split \& Merge Segmentation}
+Let $H$ be a function to analyse the homogeneity of a region $(R)\to\{0,1\}$
+\begin{enumerate}[label=\roman*)]
+	\item Let $R_0$ represent the entire image.
+	\item If $H(R_i)=0$ (\ie is inhomogenous) then split it into four regions.
+	\item Repeat \textbf{ii)} until all regions are homogenous.
+	\item Merge all subregions that satisfy $H(R_i\cup R_j)=1$ (\ie are homogeneous)
+\end{enumerate}
+
+\proposition{Clustering Segmentation}
+If we map the RGB values of an image into the 3D real space we can we clustering algorithms to produce $k$ clusters. We then map back to the pixel space using each cluster as a segment.\\
+\nb Look at k-means clustering.
+
 \newpage
 \setcounter{section}{-1}
 
@@ -490,9 +583,15 @@ The algorithm defined in \textbf{Proposition 4.4} only detects shapes of the sam
 
 \subsection{Definitions}
 
+\definition{Connectivity}
+When analysing a pixel there are several ways to consider its adjacent neighbourhood.
+\begin{itemize}
+	\item[-] 4-Connectivity. The pixels above, below, left \& right.
+	\item[-] 8-Connectivity. Above, below, left, right \& single step diagonals.
+\end{itemize}
+
 \definition{Kernel}
 A \textit{Kernel} is a small matrix used in convolution. Typically $3\times3$ or $5\times5$. \textit{Kernels} can be defined for blurring, sharpening, embossing, edge detection \& more
 \nb This definition only applies to image processing \& is different from the definition in linear algebra.
-
 
 \end{document}
