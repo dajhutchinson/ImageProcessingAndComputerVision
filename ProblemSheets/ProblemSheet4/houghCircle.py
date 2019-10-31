@@ -4,7 +4,6 @@ import sys
 import sobel
 """
 TODO
-- Alternative to overlap
 - Thresholding
 """
 def find_threshold_value(arr:np.ndarray):
@@ -105,7 +104,7 @@ def hough(mag:np.ndarray,dir:np.ndarray,hough_threshold=100,min_radius=10,max_ra
 # hough_space=[[x_c,y_c,r]]
 def hough_magnitude(hough_space:np.ndarray, threshold=10):
     img=np.ndarray(hough_space.shape[0:2])
-    max=-sys.maxsize; min=sys.maxsize # for normalisation
+    max=-sys.maxsize; min=sys.maxsize
     for i in range(0,img.shape[0]):
         for j in range(0,img.shape[1]):
             n=np.sum(hough_space[i,j,:]) # sum of votes for all radia
@@ -117,7 +116,6 @@ def hough_magnitude(hough_space:np.ndarray, threshold=10):
 
     print(min,max)
     print(hough_space.max())
-    # normalise
 
     return sobel.normalise(img)
 
@@ -131,7 +129,6 @@ def hough_img(colour_img:np.ndarray,hough_space:np.ndarray,threshold=5,max_centr
         for j in range(0,hough_space.shape[1]):
             for k in range(0,hough_space.shape[2]):
                 if (hough_space[i,j,k]>=threshold):
-                    overlay[i,j]=[0,0,255]
                     to_plot.append([hough_space[i,j,k],i,j,k])
                     centres[i,j]=255
                 else:
