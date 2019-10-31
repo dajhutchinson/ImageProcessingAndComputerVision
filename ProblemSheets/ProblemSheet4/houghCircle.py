@@ -9,6 +9,10 @@ TODO
 """
 def find_threshold_value(arr:np.ndarray):
     arr=arr.flatten(); arr.sort()
+    arr=arr[arr!=0]
+    if len(arr)==0:
+        return 255
+    """return arr[int(.97*len(arr))]"""
     T=arr[int(len(arr)/2)]
     before=T
     while True:
@@ -79,16 +83,20 @@ def hough(mag:np.ndarray,dir:np.ndarray,hough_threshold=100,min_radius=10,max_ra
                         psis=[dir[i,j]]
 
                     for psi in psis:
-                        psi=dir[i,j]
                         y_c=i-int(r*np.sin(psi))
                         x_c=j+int(r*np.cos(psi))
                         if (y_c>=0) and (y_c<parameter_space.shape[0]) and (x_c>=0) and (x_c<parameter_space.shape[1]):
                             parameter_space[y_c,x_c,r]+=1
-
+                        else:
+                            break
+                    # Opposite direction (same line)
+                    for psi in psis:
                         y_c=i+int(r*np.sin(psi))
                         x_c=j-int(r*np.cos(psi))
                         if (y_c>=0) and (y_c<parameter_space.shape[0]) and (x_c>=0) and (x_c<parameter_space.shape[1]):
                             parameter_space[y_c,x_c,r]+=1
+                        else:
+                            break
 
     # implement thresholding
     return parameter_space
@@ -113,7 +121,7 @@ def hough_magnitude(hough_space:np.ndarray, threshold=10):
 
     return sobel.normalise(img)
 
-def hough_img(colour_img:np.ndarray,hough_space:np.ndarray,threshold=5,allow_overlaps=False):
+def hough_img(colour_img:np.ndarray,hough_space:np.ndarray,threshold=5,max_centre_proximity=20):
     overlay=np.zeros((colour_img.shape[0],colour_img.shape[1],3))
     centres=np.zeros((colour_img.shape[0],colour_img.shape[1]))
 
@@ -130,27 +138,18 @@ def hough_img(colour_img:np.ndarray,hough_space:np.ndarray,threshold=5,allow_ove
                     overlay[i,j]=colour_img[i,j]
 
     to_plot.sort(key=lambda x:x[0], reverse=True)
-    print(len(to_plot))
     plotted=[]
-    if not allow_overlaps:
-        for (s,i,j,k) in to_plot:
-            overlap=False
+    for (s,i,j,k) in to_plot:
+        min_dist=sys.maxsize
+        for (i0,j0,k0) in plotted:
+            dist=np.sqrt((i-i0)**2+(j-j0)**2)
+            min_dist=min(min_dist,dist)
 
-            # check whether this circle overlaps with any that have already been plotted
-            for (i0,j0,k0) in plotted:
-                distSq=(i0-i)**2 + (j0-j)**2
-                radSumSq=(k0+k)**2
-
-                if distSq<radSumSq:
-                    overlap=True
-                    break
-
-            if (not overlap):
-                cv.circle(overlay, (j,i), k, (0,0,255), 2)
-                plotted.append([i,j,k])
-    else:
-        for (s,i,j,k) in to_plot:
+        # Out of range, or no overlap
+        if min_dist>max_centre_proximity or (min_dist>k):
             cv.circle(overlay, (j,i), k, (0,0,255), 2)
+            plotted.append([i,j,k])
+    print("{}/{}".format(len(plotted),len(to_plot)))
 
     return overlay, centres
 
@@ -159,7 +158,7 @@ def circle_threshold_value(hough_space:np.ndarray,min_n=30,max_n=1000) -> int:
     flat=hough_space.flatten()
     flat=flat[flat!=0]
     flat.sort()
-    percentile=int(.99*len(flat))
+    percentile=int(.995*len(flat))
     if len(flat[percentile:])<=min_n:
         return flat[-min_n]
     elif len(flat[percentile:])>=max_n:
@@ -191,25 +190,26 @@ def run(path):
     cv.imwrite("img/direction.png",direction_normalised)
     print("Direction done")
 
-    magnitude_threshold,direction_threshold=threshold_boxes(magnitude,direction_normalised,width=int(magnitude.shape[1]/10),height=int(magnitude.shape[0]/10),threshold=50)
+    magnitude_threshold,direction_threshold=threshold_boxes(magnitude,direction_normalised,width=int(magnitude.shape[1]/5),height=int(magnitude.shape[0]/5),threshold=50)
     """
     T=find_threshold_value(img)
     print("T:{}".format(T))
     magnitude_threshold,direction_threshold=thresholding(magnitude,direction_normalised,threshold=T)
-    print("Magnitude & Direction Thresholded")
     """
     cv.imwrite("img/magnitude_threshold.png",magnitude_threshold)
     cv.imwrite("img/direction_threshold.png",direction_threshold)
+    print("Magnitude & Direction Thresholded")
 
     hough_space=hough(magnitude_threshold,direction,min_radius=30,max_radius=80,psi_range=np.pi/10)
     print("hough done")
+    print(hough_space.shape)
     hough_image=hough_magnitude(hough_space,threshold=0)
     print("hough image")
     cv.imwrite("img/hough_img.png",hough_image)
 
-    circle_threshold=circle_threshold_value(hough_space)
+    circle_threshold=circle_threshold_value(hough_space,max_n=200)
     print(circle_threshold)
-    overlay,centres=hough_img(colour_img,hough_space,threshold=circle_threshold,allow_overlaps=False)
+    overlay,centres=hough_img(colour_img,hough_space,threshold=circle_threshold,max_centre_proximity=30)
     print("overlay done")
     cv.imwrite("img/centres.png",centres)
     cv.imwrite("img/overlay.png",overlay)
