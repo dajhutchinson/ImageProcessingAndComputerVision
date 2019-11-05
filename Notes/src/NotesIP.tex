@@ -576,6 +576,89 @@ Let $H$ be a function to analyse the homogeneity of a region $(R)\to\{0,1\}$
 If we map the RGB values of an image into the 3D real space we can we clustering algorithms to produce $k$ clusters. We then map back to the pixel space using each cluster as a segment.\\
 \nb Look at k-means clustering.
 
+\section{Classical Object Detection}
+
+\remark{Classical Object Detection}
+In this course we only conver \textit{Classical Object Detection}. This technique came to prominence with the 2001 paper \textit{First Real-Time Detection Method: Viola \& Jones' - 2001} and was the industry standard for 10+ years. Now there are methods which use deep learning techniques.\\
+
+\definition{Object Detection}
+\textit{Object Detection} bridges the semantic gap between [ixel values \& meaningful objects by grouping pixels and classifying. This is a difficult problem.\\
+
+\remark{Failings of Shape Detection for Object Detection}
+Typically using classical \textit{Shape Detection} \& \textit{Segmentation} does not work for real world applications of \textit{Object Detection} due
+\begin{enumerate}[label=\roman*)]
+	\item High Intra-Class \& Low Inter-Class variance;
+	\item Classes are rarely well defined;
+	\item Variations in illumination, scale, pose, deformation, occlusion etc.
+\end{enumerate}
+
+\remark{Shift-Scale Invariance}
+We require \textit{Object Detection} algorithms to be shift \& scale invariant so it can detect objects of any size at any point in the image.\\
+
+\definition{Sliding Window Detectors}
+\textit{Sliding Window Detectors} ensure shift \& scale invariance by setting a minimum size to check (say $20\times20$px) and shifts the region it checks by 1px right-to-left, top-to-bottom until the whole is checked. They then increase the size of the region it checks (say $10\%$) and repeats the shifting. It does this until the size of the region it checks exceeds the size of the image.\\
+\nb This technique does not work in real-time due to its high computation complexity.\\
+
+\definition{Haar-Like Features}
+\textit{Haar-Like Features} are features of digital images used in \textit{Object Detection}. They define a set of adjacent rectangles and assigns them to either be \textit{light} or \textit{dark} regions. It then returns a value, the average gray value of the light region less the average gray value of the dark region. This value is then compared to a threshold value to determine whether the feature occurs in the image.\\
+
+\proposition{Haar-Like Feature Types}
+There are a finite set of \textit{Haar-Like Features Types}\\
+\includegraphics[scale=.6]{img/haar.png}\\
+
+\definition{Image Integral}
+The \textit{Integral} of an image $I$ is the image $J$ where $J(x,y)=\sum_{i=0}^x\sum_{j=0}^yI(i,j)$. \ie Each pixel value is the sum of all pixels between it an the origin, inclusive.\\
+
+\proposition{Calculating Image Integral}
+Let $I$ be an image then we can calculate the \textit{Integral} of $J$ in \textit{Linear Time} using the following formulae
+\[\begin{array}{l}
+A(x,-1)=0\\
+A(x,y)=A(x,y-1)+I(x,y)\\
+J(-1,y)=0\\
+J(x,y)=J(x-1,y)+A(x,y)
+\end{array}\]
+
+\theorem{Integration Rule of Convolution}
+
+\proposition{Calculating the Average Pixel Value of a Large Block}
+Calculating the average pixel value of a large block can be very slow if the region is very large. Here is a technique that can do it by only quering 4 values.
+\begin{enumerate}[label=\roman*)]
+	\item Create a matrix which is the same size as the image.
+	\item Encode the matrix st its values are 1 in the region we want to check \& 0 everywhere else.
+	\item Double Differentiate this matrix to produce $I''$
+	\begin{enumerate}
+		\item First, horizontally by applying $\begin{pmatrix}0&-1&1\end{pmatrix}$ to every pixel.
+		\item Then, vertically by applying $\begin{pmatrix}0\\-1\\1\end{pmatrix}$ to every pixel.
+	\end{enumerate}
+	This leaves us with four non-zeros values (two $1$s and two $-1$s).7
+	\item Calculate the image integral $J$.
+	\item Return $\sum_i\sum_j I''(i,j)\times J(i,j)$\\
+	\nb This can be simplied to just be the four non-zero terms in $I''$.
+\end{enumerate}
+
+\proposition{Training Data}
+Two categories of \textit{Trainging Data} should be provided: \textit{Positive Samples}, images of the object you wish to classify' and, \textit{Negative Samples}, images which do not contain the object. These should be labled $(x_i,y_i)$ with $y_i=0,1$ for \textit{Negative} and\textit{Positive Samples} respectively.\\
+
+\definition{Adaboost}
+\textit{Adaboost} (Short for \textit{Adaptive Boosting}) is a machine learning algorithm.\\
+Let $(x_1,y_1),\dots,(x_n,y_n)$ with $y_i=0,1$ for negative \& positive samples respectively
+\begin{enumerate}[label=\roman*)]
+	\item Initalise weights $w_{1,i}=\begin{cases}\frac{1}{2^m},&\text{if }y_i=0\\\frac{1}{2^l},&\text{if }y_i=1\end{cases}$ where $m$ is the number of negative samples \& $l$ is the number of positive samples.
+	\item For $t=1,\dots,T$ where $T$ is the number of features you wish to find
+	\begin{enumerate}
+		\item Normalise the weights st $w_t$ is a probability distribution
+		$$w_{t,i}:=\frac{w_{t,i}}{\sum_{j=1}^nw_{t,j}}$$
+		\item For each feature, $j$, train a classifier $h_j$ which is restricted to using a single feature (Haar-Like Feature). Calculate the error wrt $w_t$
+		$$e_j=\sum_iw_i|h_j(x_i)-y_i|$$
+		\item Choose the classifier, $h_t$, with the lowest error $e_t$.
+		\item Update the weights
+		$$w_{t+1,i}=w_{t,i}\left(\frac{e_t}{1-e_t}\right)^{1-e_i}$$
+		where $e_i=0$ if sample $x_i$ is classified correctly and $e_i=1$ otherwise
+	\end{enumerate}
+	\item The final strong classifier is
+	$$h(x)=\begin{cases}1&\sum_{i=1}^T\log\left(\frac{e_t}{1-e_t}\right)h_t(x)\geq\frac{1}{2}\sum_{t=1}^T\log\left(\frac{1-e_t}{e_t}\right)\\0&\text{otherwise}\end{cases}$$
+\end{enumerate}
+
 \newpage
 \setcounter{section}{-1}
 
