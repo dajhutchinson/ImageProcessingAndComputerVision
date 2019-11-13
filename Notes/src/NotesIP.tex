@@ -659,6 +659,86 @@ Let $(x_1,y_1),\dots,(x_n,y_n)$ with $y_i=0,1$ for negative \& positive samples 
 	$$h(x)=\begin{cases}1&\sum_{i=1}^T\log\left(\frac{e_t}{1-e_t}\right)h_t(x)\geq\frac{1}{2}\sum_{t=1}^T\log\left(\frac{1-e_t}{e_t}\right)\\0&\text{otherwise}\end{cases}$$
 \end{enumerate}
 
+\section{Motion}
+
+\definition{Video Sequences}
+A video can be considered as a series of matrices, each representing an image at a different point in time. The time difference between consecutive matrices will be constant, $\Delta t$ seconds.\\
+Define $I(x,y,t)$ to be the intensity of the pixel at position $(x,y)$ at time $t$.\\
+
+\definition{Frame Rate}
+\textit{Frame Rate} is the number of images per second in a video. Typically measured in FPS (\textit{Frames Per Second}), this is equivalent to Hz.
+$$\text{Frame Rate}=\frac{1}{\Delta T}$$
+\nb Typical frame rates are $24fps,\ 30fps\ \&\ 60fps$.\\
+
+\definition{2D Tracking}
+\textit{2D Tracking} is tracking how an object moves in a two dimensional plane. The object may really be moving a three dimensionial plane, but we only care about its movement in a specified 2D plane.\\
+This means the object has 3 attributes: x position, y position \& orientation. Scale can be considered too.\\
+
+\example{2D Tracking}
+In the below image the path the pen has taken in the plane parallel to the camera has been tracked. The pen is actually moving in 3-dimensions, but we are ignoring depth in this example.\\
+\includegraphics[scale=1]{img/2dtracking.png}
+
+\definition{3D Tracking}
+\textit{3D Tracking} is used to track an object's movement in a three dimensional space. This means an object has six factors: x,y,z positions and rotation in the x,y,z directions. Scale can be considered too.
+
+\example{3D Tracking}
+In the below image a printer is tracker so that a skeleton of it can be mapped to it.\\
+\includegraphics[scale=1]{img/3dtracking.png}
+
+\definition{Simultaneous Localisation and Mapping}
+\textit{Simultaneous Localisation and Mapping}, SLAM, is the process of constructing and updating a map of an unknown enviroment while tracking the camera's position within it.\\
+\nb This can be made easier by using a depth sensor.\\
+
+\definition{Perspective Projection Equations}
+Suppose a 3D point $\textbf{P}=(X,Y,Z)$, which sits on the surface of an object, is projected to a point in two dimensions, $\textbf{p}=(x,y,f)$ ($f$ is the distance of the 2D plane from the camera). Then, by similar triangles
+$$x=\frac{fX}{Z}\text{ and }y=\frac{fY}{Z}$$
+\includegraphics[scale=.5]{img/perspectiveprojectionequations.png}
+
+\definition{Rotation Matrices}
+A \textit{Rotation Matrix} can be applied to a position, by matrix-multiplication, to perform a rotation on that position. A \textit{Rotation Matrix}, $R$ can be broken down into \textit{Rotation Matrices} which represent the rotation about each axis. In three-dimensions this means $R=R_XR_YR_Z$.\\
+\nb \textit{Rotation Matrices} are $n\times n$ in $n$-dimensional space.\\
+
+\remarkk{3D Rotation Matrices}
+$$R_X(\theta)=\begin{pmatrix}1&0&0\\0&\cos\theta&-\sin\theta\\0&\sin\theta&\cos\theta\end{pmatrix}\quad R_Y(\theta)=\begin{pmatrix}\cos\theta&0&\sin\theta\\0&1&0\\-\sin\theta&0&\cos\theta\end{pmatrix}\quad R_Z(\theta)=\begin{pmatrix}\cos\theta&-\sin\theta&0\\\sin\theta&\cos\theta&0\\0&0&1\end{pmatrix}$$
+
+\proposition{Rotation Matrices for small $\theta$}
+When $\theta$ is small we can approximate $\sin\theta\approx\theta$ and $\cos\theta\approx1$. Thus
+$$R_X(\theta)=\begin{pmatrix}1&0&0\\0&1&-\theta\\0&\theta&1\end{pmatrix}\quad R_Y(\theta)=\begin{pmatrix}1&0&\theta\\0&1&0\\-\theta&0&1\end{pmatrix}\quad R_Z(\theta)=\begin{pmatrix}1&-\theta&0\\\theta&1&0\\0&0&1\end{pmatrix}$$
+
+\definition{Rigid Object}
+A \textit{Rigid Object} is one which does not change in shape, only scale \& rotation.\\
+
+\proposition{3D Rigid Motion}
+Consider a \textit{Rigid Object} \& a point on that object $\textbf{P}$.\\
+If the object is moved st point $\textbf{P}$ is now at position $\textbf{P}'$ then we can describe $\textbf{P}'$ in terms of $\textbf{P}$ by defining a translation matrix $T$ and a rotation matrix $R$.
+$$\textbf{P}'=R\textbf{P}+T$$
+\nb $\textbf{P},\ \textbf{P}'\ \&\ T$ are $3\times1$ matrices and $R$ is a $3\times3$ matrix.\\
+
+\proposition{3D Motion Field}
+Consider a \textit{Rigid Object} \& a point on that object $\textbf{P}$.\\
+Let $V$ be the vector which represents the translation from $\textbf{P}$ to $\textbf{P}'$. We have
+$$V=\lim_{\Delta t\to0}[\textbf{P}'-\textbf{P}]=\lim_{\Delta t\to0}[(R-I)\textbf{P}+T]$$
+We note that for small $\theta_X,\theta_Y\ \&\ \theta_Z$
+$$R=\begin{pmatrix}1&-\theta_Z&\theta_Y\\\theta_Z&1&-\theta_X\\-\theta_Y&\theta_X&1\end{pmatrix}$$
+Thus
+\[\begin{array}{rcccl}
+\frac{dX}{dt}&=&V_X&=&\theta_YZ-\theta_ZY+T_X\\
+\frac{dY}{dt}&=&V_Y&=&\theta_ZX-\theta_XZ+T_Z\\
+\frac{dZ}{dt}&=&V_Z&=&\theta_XY-\theta_YX+T_Z
+\end{array}\]
+\nb Here $(\theta_X,\theta_Y,\theta_X)$ is called the \textit{Angular Velocity} and $(T_X,T_Y,T_Z)$ is called the \textit{Rectilinear Velocity} since we are taking the limit as $\Delta t$ tends to 0.\\
+
+\proposition{2D Motion Field Equations}
+Consider a point $\textbf{p}=(x,y,f)$ which represents a 2D projection of a point $\textbf{P}=(X,Y,Z)$.\\
+Then
+\[\begin{array}{rcl}
+v_x&=&\frac{d}{dt}x\\
+&=&\frac{d}{dt}\left(\frac{fX}{Z}\right)\\
+&=&f\frac{V_XZ-XV_Z}{Z^2}\text{ by quotient rule}
+\end{array}\]
+Substituting $V_X,V_Y,V_Z$ for the definitions in \textbf{Proposition 7.3} we get
+$$v_x=\frac{fT_X-xT_Z}{Z}+f\theta_Y-\theta_Zy-\frac{\theta_Xxy-\theta_Yx^2}{f}\text{ and }v_y=\frac{fT_Y-yT_Z}{Z}-f\theta_X+\theta_Zx+\frac{\theta_Yxy-\theta_Xy^2}{f}$$
+We can recognise two components of these equations: Translation, terms involving $T$; and Rotation, terms involving $\theta$.
 \newpage
 \setcounter{section}{-1}
 
