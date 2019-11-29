@@ -739,6 +739,74 @@ v_x&=&\frac{d}{dt}x\\
 Substituting $V_X,V_Y,V_Z$ for the definitions in \textbf{Proposition 7.3} we get
 $$v_x=\frac{fT_X-xT_Z}{Z}+f\theta_Y-\theta_Zy-\frac{\theta_Xxy-\theta_Yx^2}{f}\text{ and }v_y=\frac{fT_Y-yT_Z}{Z}-f\theta_X+\theta_Zx+\frac{\theta_Yxy-\theta_Xy^2}{f}$$
 We can recognise two components of these equations: Translation, terms involving $T$; and Rotation, terms involving $\theta$.
+
+\subsection{Motion Estimation}
+
+\definition{Motion Estimation}
+\textit{Motion Estimation} is the process of using spatial \& temporal variation in pixel values to detet amount of movement in an image region.\\
+
+\definition{Optical Flow}
+\textit{Optical Flow} is the movement of pixel values between frames. We assume that pixels follow a trajectory through frames. \ie There is a sequence $(x(t),y(t))$ that shows how a pixel moves from frame to frame.\\
+\includegraphics[scale=.4]{img/apparentMotion.png}\\
+\nb Also known as \textit{Apparent Motion}.\\
+
+\remark{Optical Flow \& True Motion}
+In some cases the \textit{Optical Flow} in an image is not equivalent to the \textit{True Motion} of the object. Consider a diagonal rod moving across the screen, it is generally very hard to tell if it is moving horizontally or vertically or any other direction.\\
+\nb This is sometimes the result of the \textit{Aperture Problem}.\\
+
+\definition{Optical Flow Equation}
+Let $I(x,y,t)$ be the grayscale value of pixel $(x,y)$ at time $t$. If we wish to follow a particular pixel between frames we find that $I(x,y,t)$ is fixed \& $(x,y)$ depend on $t$. Further
+$$\frac{d}{dt}I(x,y,t)=0$$
+By the chain rule we have
+$$\frac{\partial I}{\partial x}\frac{dx}{dt}+\frac{\partial I}{\partial y}\frac{dy}{dt}+\frac{\partial I}{\partial t}=0\implies I_xv_x+I_yv_y+I_t=0$$
+\nb Gradient$=(I_x,I_y,I_t)$ and Motion=$(v_x,v_y)$.\\
+
+\remark{Estimating the Optical Flow Equation}
+The \textit{Optical Flow Equation} has two unknowns $v_x\ \&\ v_y$. This means we cannot solve it for a single pixel, as it would be underconstrained. Hence we have to \textit{estimate} its value by using multiple pixels.\\
+Often a $2\times2$ square of pixels is used to estimate the \textit{Normal Flow} of the central point.\\
+\nb The number of pixels used to \textit{estimate} depends on the complexity of $v_x$ \& $v_y$. If $v_x$ \& $v_y$ are linear in $x\ \&\ y$ with 3 parameters (\eg $v_x=ax+by+c$) then four pixels is sufficient.\\
+
+\proposition{Constant Velocity Model}
+Suppose we have a region $R$ of the image (often taken as the whole image) we can assume it has constant velocity $(v_x,v_y)$ accross it. Then our problem is to find $v_x,v_y$ which minimise
+$$\varepsilon(v_x,v_y)=\sum_R\left(I_xv_x+I_yv_y+I_t\right)^2$$
+\nb This is a minimisation problem since, ideally, $I_xv_x+I_yv_y+I_t=0$.\\
+
+\theorem{Lucas-Kanade Algorithm}
+The \textit{Lucas-Kanade Algorithm} aims to solve the problem in \textbf{Proposition 7.5}.\\
+Since it is a minimisation problem we take the derivatives and find
+$$\frac{\partial\varepsilon}{\partial v_x}=2\sum_RI_x(I_xv_x+I_yv_y+I_t)\quad\text{and}\quad\frac{\partial\varepsilon}{\partial v_y}=2\sum_RI_y(I_xv_x+I_yv_y+I_t)$$
+Equating these to zero and solving we find
+$$\begin{pmatrix}v_x\\v_y\end{pmatrix}=A^{-1}b\text{ where }A:=\sum_R\begin{pmatrix}I_x^2&I_xI_y\\I_xI_y&I_y^2\end{pmatrix}\text{ and }b=-\sum_R\begin{pmatrix}I_tI_x\\I_tI_y\end{pmatrix}$$
+
+\remark{Motion for Object Detection}
+\textit{Motion Estimates} can be a good cue for object detection (and segmentation) as it implies depth in the image. However it requires an object to have an approximately constant velocity otherwise it will be partitioned (consider trying to detect the body of a person who is waving their arm).\\
+
+\definition{Layered Representation}
+If the camera is moving with a constant motion we can infer depth from the image by identifying motion-homogeneous regions. We can use this information to produce a \textit{Layered Representation} of the image, where each layer is a \textit{depth-homogeneous} region.\\
+
+\definition{Layered Video}
+Every frame of an image can be split into three maps
+\begin{enumerate}
+	\item Colour Map - The colour of each pixel in the layer.
+	\item Alpha Map - The pixels which are in the layer.
+	\item Velocity Map - The \textit{Motion Estimate} for pixels in the layer.
+\end{enumerate}
+
+\propositionn{Motion Segmentation Process}
+\begin{enumerate}
+	\item Perform \textit{Block Motion Fitting}.\\
+	\begin{enumerate}
+		\item Split the image into blocks of equal area.
+		\item Estimate the motion in each block.
+	\end{enumerate}
+	\item Detect the dominant motions using clustering algorithms and returning the centroids of each cluster.
+	\item Perform \textit{Motion Segmentation} by assigning pixels to the dominant motion which is closest to theirs
+	\item Produce Final Parameteric Motion Fitting by updating our motion estimates using our assigned pixel motions.
+\end{enumerate}
+
+\proposition{Region Linking \& Alignment}
+Once we have used the process in \textbf{Proposition 7.6} we can pick a particular region \& align it across every frame. By taking the median values of every pixel in this aligned form we can produce the maps mentioned in \textbf{Definition 7.13}
+
 \newpage
 \setcounter{section}{-1}
 
