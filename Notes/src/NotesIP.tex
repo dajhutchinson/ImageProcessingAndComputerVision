@@ -11,7 +11,8 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{changepage} 
-\usepackage{longtable} 
+\usepackage{longtable}
+\usepackage{stackengine,scalerel}
 
 \begin{document}
 
@@ -56,6 +57,12 @@
 \newcommand{\nb}[0]{\textit{N.B.} }
 \newcommand{\ie}[0]{\textit{i.e.} }
 \newcommand{\eg}[0]{\textit{e.g.} }
+
+\stackMath
+\newcommand\overarc[1]{\ThisStyle{%
+  \setbox0=\hbox{$\SavedStyle#1$}%
+  \stackon[.5pt]{\SavedStyle#1}{%
+  \rotatebox{90}{$\SavedStyle\scaleto{)}{.95\wd0}$}}}}
 
 \newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}\\}
 \newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}\\}
@@ -807,9 +814,109 @@ Every frame of an image can be split into three maps
 \proposition{Region Linking \& Alignment}
 Once we have used the process in \textbf{Proposition 7.6} we can pick a particular region \& align it across every frame. By taking the median values of every pixel in this aligned form we can produce the maps mentioned in \textbf{Definition 7.13}
 
-\newpage
-\setcounter{section}{-1}
+\section{Stereo Vision}
 
+\definition{Stereo Vision}
+\textit{Stereo Vision} is the process of producing a 3D representation of an enviroment using images taken from different viewpoints. The variation in position of objects between images is used to infer depth.
+$$-\frac{1}{\text{depth}}\propto\text{disparity}$$
+This shows that if we know disparit \& viewpoint positions we can construct a 3D scene.
+\nb Disparity is the difference in position between two images.\\
+
+\propositionn{Problems of Stereo Vision}
+\begin{enumerate}
+	\item \textbf{Calibration} - determine the relative position \& orientation of the cameras.
+	\item \textbf{Correspondence} - determine matching points in the stereo views.
+	\item \textbf{Reconstruction} - determine the 3D location of matched points in the image, via triangulation.
+\end{enumerate}
+
+\remarkk{Proposition 8.1}
+\begin{itemize}
+	\item[-] The three problems in \textbf{Proposition 8.1} are all inter-related as the information from one is used in the other.
+	\item[-] Which problem is hardest depends on the scenario. Generally reconstruction is the easiest as it relies fully on the results of the first two problems, but can be hard when it has a sparse depth matrix.
+\end{itemize}
+
+\definition{Simple Stereo Case}
+The simplest case where \textit{Stereo Vision} can be implemented is where we have just two cameras which are translations of each other, with no rotation.\\
+Here we can refer to the cameras as left \& right.\\
+
+\definition{Triangulation - Simple Stereo}
+In the \textit{Simple Stereo Case} we can infer depth by considering similar triangles.\\
+Let $p$ be a similar point; $x_l$ \& $x_r$ be the $x$-coordiante of $p$ in the left \& right image respectively; $T$ be the translation matrix between the two cameras (left to right); and, $f$ be the focal length of the cameras (assume equal for left \& right). Then
+\begin{center}\begin{tabular}{rl}
+\raisebox{-.5\height}{\includegraphics[scale=.4]{img/simpleTriangles.png}}&$\dfrac{T}{Z}=\dfrac{T+x_r-x_l}{Z-f}\implies Z=\dfrac{fT}{x_l-x_r}$\end{tabular}\end{center}
+
+\definition{Epipolar Geometry}
+\textit{Epipolar Geometry} defines teh relationship between two stereo views. Consider a scenarion where we have just two cameras which related by a transformation $T$ \& rotation $R^T$ (\ie $P_L=R^TP_R+T$).\\
+Let $p_l$ be the position of a point in the image of the left camera. We define two \textit{Epipolar Lines} related\\
+\begin{tabular}{p{.3\linewidth}p{.7\linewidth}}
+\raisebox{-\height}{\includegraphics[scale=.3]{img/epipolarLine.png}}&\begin{enumerate}
+	\item For $p_l$ we have an epipolar line which is the line which runs from the left camera's focal point, through $p_l$ and beyond. This is the set of all possible true positions of $P$ in the 3D space.
+	\item For $p_r$ we have an epipolar line which reprensents the set of all possible positions of $P$ on the right camera's image.
+\end{enumerate}
+\end{tabular}
+Further we define the \textit{Epipolar Plane} to be the plane defined by these two \textit{Epipolar Lines} \& \textit{Epipoles} to be the points at which the \textit{Epipolar Lines} intersect $T$.\\
+
+\proposition{Epipolar Geometry}
+Consider the rigid transformation between cameras
+$$P_L=R^TP_R+T\Longleftrightarrow P_R=R(P_L-T)$$
+We can accound for perspective projection with
+$$P_L=\begin{pmatrix}X_L\\Y_L\\Z_L\end{pmatrix}\quad p_L=\begin{pmatrix}x_L\\y_L\\f\end{pmatrix}=\frac{fP_L}{Z_L}\quad p_R=\begin{pmatrix}x_R\\y_R\\f\end{pmatrix}=\frac{fP_R}{Z_R}$$
+TODO - More maths. Not sure the context of it though (ie why we want =0)
+\newpage
+
+\proposition{Derivation of the Epipolar Line - Right Image}
+Consider the \textit{Simple Stereo Case} where the focal points are separated by transformation $T$ and rotation $R$.\\
+Let $P$ be the point we wish to triangulate.\\
+Let $P_L$ \& $P_R$ be the vectors to $P$ from the focal points of the left \& right cameras respectively.\\
+We have that $P_L$ \& $T$ both lie on the epipolar plane, thus $P_L-T$ is in the epipolar plane and $T\otimes P_L$ is perpendicular to the plane. Thus
+$$(P_L-T)^T(T\otimes P_L)=0\text{ since they are perpendicular to each other}$$
+We have that $P_R=R(P_L-T)$.\\
+Note that $R^T=R^{-1}$ giving
+$$R^TP_R=(P_L-T)\implies P_R^TR=(P_L-T)^T$$
+Further we can redefine
+$$(T\otimes P_L)=SP_L\text{ where }S:=\begin{pmatrix}0&-T_Z&T_Y\\T_Z&0&-T_X\\-T_Y&T_X&0\end{pmatrix}$$
+Substituting these two results into the first equation we get
+$$(P_L-T)(T\otimes P_L)=P_R^TRSP_L=0$$
+For simplicity, we define the \textit{Essential Matrix} $E:=RS$. Thus
+$$P_R^TRSP_L=0\implies P_R^TEP_L=0$$
+Let $p_L$ \& $p_R$ be the vectors from the focal point to the pixel which represents $P$ in the left \& right images respectfully. Then
+$$p_L=\frac{fP_L}{Z_L}\text{ and }p_R=\frac{fP_R}{Z_R}\implies\frac{Z_R}{f}p_R^TE\frac{Z_L}{f}p_L=0\implies p_R^TEp_L=0$$
+where $f$ is the focal length and $Z_R$ \& $Z_L$ are the depth of $P$ from each image.\\
+Define $\textbf{u}_L=Ep_L=\begin{pmatrix}u_{L1}\\u_{L2}\\u_{L3}\end{pmatrix}$. Then
+$$p_R^TEp_L=p_R^T\textbf{u}_L=x_Ru_{L1}+y_Ru_{L2}fu_{L3}=0$$
+This is the euqation for the \textit{Epipolar Line} in the right image.\\
+
+\definition{Fundamental Matrix}
+Let $x=s_x(\overarc{x}-\overarc{o}_x)$ and $y=s_y(\overarc{y}-\overarc{o}_y)$.\\
+Then
+$$p_L=\begin{pmatrix}x_L\\y_L\\f\end{pmatrix}=M_L\begin{pmatrix}\overarc{x}_L\\\overarc{y}_L\\f\end{pmatrix}=M_L\overarc{p}_L$$
+Thus
+$$p_R^TEp_L=\overarc{p}_R^TM_R^TEM_L\overarc{p}_L=0$$
+For simplicity we define the \textit{Fundamental Matrix} $F=M_R^TEM_L$.
+$$\overarc{p}_R^TF\overarc{p}_L=0$$
+
+\proposition{Fundamental Matrix from Correspondences}
+Consider a set of \textit{Correspondences}, \ie a set of pairs of points $(\overarc{p}_R(i),\overarc{p}_L(i))$ which represent the same point in the scene, but in the seperate images.\\
+We have
+$$\overarc{p}_R^T(i)F\overarc{p}_L(i)=0\text{ for }i\in[1,N]$$
+This producs a series of simultaneous equations which can be solved for $F$.\\
+We can simplify the problem to
+$$A\textbf{f}=0$$
+where $A$ is an $N\times 9$ matrix defined by the corresponsence vectors and $\textbf{f}$ is the components of $F$.\\
+\nb $A\textbf{f}=0$ can be solved for $\textbf{f}$ using Singular Value decomposition.\\
+
+\proposition{3D Reconstruction}
+To find $P$ we need to find $a,b,c$ st
+$$ap_L-bR^Tp_R-T-c(p_L\otimes R^Tp_R)=0$$
+where $ap_L$ is the line of possible points for $P$ given it appears at pixel $p_L$ in the left image, $bR^Tp_R+T$ is the equivalent for the right image \& $T$ is the translation from left to right image.\\
+Given corresponding points we know $p_L$ \& $p_R$ and given calibrated views we know $R$ \& $T$ making $a,b,c$ the only unknowns in this equation.\\
+We have
+$$ap_L-bR^Tp_R-c(p_L\otimes R^Tp_R)=T$$
+We define $T=H\begin{pmatrix}a\\b\\c\end{pmatrix}\implies\begin{pmatrix}a\\b\\c\end{pmatrix}=H^{-1}T$
+Once solved we give our estimate for $P$ as
+$$\hat{P}=\frac{1}{2}(ap_L=bR^Tp_R+T)$$
+
+\setcounter{section}{-1}
 \section{Reference}
 
 \subsection{Definitions}
