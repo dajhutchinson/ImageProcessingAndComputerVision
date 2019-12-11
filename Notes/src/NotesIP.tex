@@ -887,7 +887,8 @@ $$p_R^TEp_L=p_R^T\textbf{u}_L=x_Ru_{L1}+y_Ru_{L2}fu_{L3}=0$$
 This is the euqation for the \textit{Epipolar Line} in the right image.\\
 
 \definition{Fundamental Matrix}
-Let $x=s_x(\overarc{x}-\overarc{o}_x)$ and $y=s_y(\overarc{y}-\overarc{o}_y)$.\\
+Let $(\overarc{o}_x,\overarc{o}_y)$ be the origin (often the centre) of the image \& $(\overarc{x},\overarc{y})$ be the row-column coordinates of a pixel of interest.\\
+Define $x:=s_x(\overarc{x}-\overarc{o}_x)$ and $y:=s_y(\overarc{y}-\overarc{o}_y)$ for some $s_x,s_y\in\reals$.\\
 Then
 $$p_L=\begin{pmatrix}x_L\\y_L\\f\end{pmatrix}=M_L\begin{pmatrix}\overarc{x}_L\\\overarc{y}_L\\f\end{pmatrix}=M_L\overarc{p}_L$$
 Thus
@@ -906,15 +907,112 @@ where $A$ is an $N\times 9$ matrix defined by the corresponsence vectors and $\t
 \nb $A\textbf{f}=0$ can be solved for $\textbf{f}$ using Singular Value decomposition.\\
 
 \proposition{3D Reconstruction}
-To find $P$ we need to find $a,b,c$ st
-$$ap_L-bR^Tp_R-T-c(p_L\otimes R^Tp_R)=0$$
+When considering the two rays (from each image) on which a point $P$ may lie it is very unlikely that the two lines will intersect thus we consider the point of closing passing on each of these rays.\\
+We predict that $P$ lies on the midpoint between these two points.\\
+Let $ap_L$ be the vector the passing point on the left image, then $bR^Tp_R+T$ is a vector the pass point on the ray of the right image wrt the left image.\\
+To find the closest passing points we want to find $a,b,c>0$ st
+$$ap_L-bR^Tp_R-T-\underbrace{c(p_L\otimes R^Tp_R)}_\text{miforces perpendicular}=0$$
 where $ap_L$ is the line of possible points for $P$ given it appears at pixel $p_L$ in the left image, $bR^Tp_R+T$ is the equivalent for the right image \& $T$ is the translation from left to right image.\\
 Given corresponding points we know $p_L$ \& $p_R$ and given calibrated views we know $R$ \& $T$ making $a,b,c$ the only unknowns in this equation.\\
-We have
-$$ap_L-bR^Tp_R-c(p_L\otimes R^Tp_R)=T$$
-We define $T=H\begin{pmatrix}a\\b\\c\end{pmatrix}\implies\begin{pmatrix}a\\b\\c\end{pmatrix}=H^{-1}T$
 Once solved we give our estimate for $P$ as
-$$\hat{P}=\frac{1}{2}(ap_L=bR^Tp_R+T)$$
+$$\hat{P}=\frac{1}{2}(ap_L+bR^Tp_R+T)$$
+
+\subsubsection{Correspondence Matching}
+
+\definition{Correspondence Matching}
+\textit{Correspondence Matching} is the process of finding pairs of features (in different images) which correspond to the same point in the scene.\\
+
+\remarkk{Challenges for Correspondence Matching}
+\begin{enumerate}
+	\item Noise and lighting effects.
+	\item Perspective transformations.
+	\item Occlusions.
+	\item Repetitive Structures.
+\end{enumerate}
+
+\proposition{What to Match?}
+When looking for corresponding pairs there are several features we can consider
+\begin{enumerate}
+	\item Pixels - Dense but they are not very distinctive.
+	\item Regions - Dense and are more distinctive than pixels, but must be wary of depth variation in a single region.
+	\item Feature Points - Sparse but distinctive.
+	\item Edges - Sparse and not necessarily distinctive as it can be hard to tell what point on an edge you are dealing with.
+	\item Objects - Sparse and distinctive but hard to identify and match.
+\end{enumerate}
+\nb Dense means there are many occurances of this feature in the image (sparse is the opposite).
+
+\proposition{Where to Search?}
+Once we have identified a feature in one image we need to consider where the corresponing point may be in the other image. Where we search depends on whether the system is calibrated or not
+\begin{enumerate}
+	\item \textbf{Un}calibrated - Corresponding point may lie anywhere, even off the image.
+	\item Calibrated - The fundamental matrix is know thus we can limit our search to the \textit{epipolar line}.
+\end{enumerate}
+
+\proposition{How to compare Elements?}
+When trying to find a corresponding pair we need a metric to judge similarities between features/regions. Some variables we may consider are
+\begin{enumerate}
+	\item Pixel intensitites.
+	\item Local Colour Variation.
+	\item Local Structure Variation.
+	\item Position and Angle of Edges.
+	\item Shape and Pose
+\end{enumerate}
+\nb The later of these are harder to calculate, but are more robust.\\
+
+\proposition{Region Matching}
+Let $I_L(\cdot,\cdot)\ \&\ I_R(\cdot,\cdot)$ return the intensity at a given coordinate for a pair of stereo images.\\
+Let $W$ be a region, centred around $(x,y)$, which we want to find a corresponding region to in our second image.
+$$\hat{\textbf{d}}:=\text{argmin}_{(d_x,d_y)}\sum_{(i,j)\in W}\text{sim}[I_L(x+i,y+j),I_R(x+i+d_x,y+j+d_y)]$$
+$\hat{W}$ which is centred around $(x+d_x,y+d_y)$ is the best corresponding match.\\
+\nb Sometimes we want to find $\text{argmax}$, depending upon the similarity function used.\\
+
+\proposition{Similaritiy Measures}
+Here are a few possible \textit{Similartity Measures}
+\begin{enumerate}
+	\item Sum of squared differences
+	$$\text{Sim}(u,v)=(u-v)^2$$
+	\item Similar Pixel Count
+	$$\text{Sim}(u,v)=\begin{cases}1&,|u-v|<T\\0&\text{otherwise}\end{cases}$$
+	where $T$ is a thresholding value.
+	\item Normalised Cross Correlation
+	$$\text{Sim}(u,v)=\frac{(u-\bar{u})(v-\bar{v})}{N_uN_v}\text{ where }N_x:=\sqrt{\sum_{k,l\in W}(x-\bar{x})^2}$$
+\end{enumerate}
+
+\proposition{Feature Based Methods}
+In \textit{Feature Based Methods} for \textit{Correspondence Matching} we restrict our search to sparse sets of features.\\
+We want to find salient points in each view and match the points.\\
+We can match points by comparing pixels or image descriptors in local regions about each point.\\
+Some examples of \textit{Feature Based Methods} include
+\begin{enumerate}
+	\item Salient Points - Harris Corner Detector.
+	\item Uncalibrated Matching - RANSAC
+	\item Scale-Invariant Feature Transform
+\end{enumerate}
+
+\proposition{Harris Corner Detection}
+Let $W$ be a region we want to compare and $I_x,I_y$ be the image derivatives in the $x$ and $y$ directions respectively.\\
+Calculate the covariance matrix of $I_x\ \&\ I_y$.
+$$A:=\sum_{(x,y)\in W}\begin{pmatrix}I_x(x,y)^2&I_x(x,y)I_y(x,y)\\I_x(x,y)I_y(x,y)&I_y(x,y)^2\end{pmatrix}$$
+Calculate the eigenvalues, $\lambda_1,\lambda_2$, of $A$. These represent the spread of gradients in the region.\\
+Our similarity metric is
+$$\text{Sal}(W)=\frac{\lambda_1\lambda_2}{\lambda_1+\lambda_2}$$
+Large values are better here as they represent a busier region.\\
+
+\proposition{RANSAC}
+Consider a system where we don't know the relationship in position between the two cameras (\ie Uncalibrated).\\
+The following steps describe \textit{RANSAC}
+\begin{enumerate}
+	\item Find potential correspondences (\eg by comparing regions around salient points)
+	\item Select a subset, of at least 7, of these matches at random.
+	\item Compute the \textit{Fundamental Matrix}, $F$, from this subset.
+	\item Assess how well $F$ describes the relationship between the unused potential correspondences.
+	\item Repeat several times then pick the best $F$.
+\end{enumerate}
+\nb \textit{RANSAC} stands for \textit{RAN}dom \textit{SA}mple \textit{C}onsensus.\\
+
+\proposition{Scale-Invariant Feature Transform}
+TODO\\
+\nb This is known as \textit{SIFT}
 
 \setcounter{section}{-1}
 \section{Reference}
